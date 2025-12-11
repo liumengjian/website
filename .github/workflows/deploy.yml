@@ -15,42 +15,86 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || 22 }}
+        envs: DEPLOY_PATH, WEB_PATH, GIT_REPO_URL, GIT_BRANCH
+        env: |
+          DEPLOY_PATH=${{ secrets.DEPLOY_PATH }}
+          WEB_PATH=${{ secrets.WEB_PATH }}
+          GIT_REPO_URL=${{ secrets.GIT_REPO_URL }}
+          GIT_BRANCH=${{ secrets.GIT_BRANCH }}
         script: |
-          DEPLOY_DIR="/var/www/website"  # 代码克隆目录
-          WEB_PATH="/www/wwwroot/www.plut0.cloud"  # 1Panel 站点根目录（核心！）
-
-          # 设置部署目录（如果未配置DEPLOY_PATH则使用默认路径）
-          if [ -n "${{ secrets.DEPLOY_PATH }}" ]; then
-            DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
+          # 设置默认部署目录
+          DEPLOY_DIR="${DEPLOY_PATH:-/soft/website}"
+          WEB_DIR="${WEB_PATH:-/www/wwwroot/www.plut0.cloud}"
+          GIT_REPO="${GIT_REPO_URL}"
+          GIT_BRANCH_NAME="${GIT_BRANCH:-main}"
+          
+          echo "=============================================="
+          echo "部署配置信息:"
+          echo "部署目录: $DEPLOY_DIR"
+          echo "Web目录: $WEB_DIR"
+          echo "Git仓库: $GIT_REPO"
+          echo "Git分支: $GIT_BRANCH_NAME"
+          echo "=============================================="
+          
+          # 检测 Node.js 和 npm
+          echo "正在检测 Node.js 环境..."
+          if command -v node >/dev/null 2>&1; then
+            NODE_PATH=$(which node)
+            NPM_PATH=$(which npm)
+            echo "Node.js 路径: $NODE_PATH"
+            echo "npm 路径: $NPM_PATH"
+            node --version
+            npm --version
           else
-            DEPLOY_DIR="/soft/website"
+            # 尝试常见路径
+            if [ -f "/usr/local/bin/node" ]; then
+              export PATH="/usr/local/bin:$PATH"
+            elif [ -f "/usr/bin/node" ]; then
+              export PATH="/usr/bin:$PATH"
+            elif [ -f "$HOME/.nvm/nvm.sh" ]; then
+              source "$HOME/.nvm/nvm.sh"
+            fi
+            
+            if ! command -v node >/dev/null 2>&1; then
+              echo "错误: 未找到 Node.js，请先安装 Node.js"
+              exit 1
+            fi
+            echo "Node.js 已找到: $(which node)"
+            echo "npm 已找到: $(which npm)"
           fi
           
           # 创建部署目录（如果不存在）
           echo "正在检查部署目录..."
           if [ ! -d "$DEPLOY_DIR" ]; then
             echo "创建部署目录: $DEPLOY_DIR"
-            mkdir -p $DEPLOY_DIR
+            mkdir -p "$DEPLOY_DIR"
           fi
           
           # 进入项目部署目录
-          cd $DEPLOY_DIR
+          cd "$DEPLOY_DIR" || exit 1
           
           # 检查是否是首次部署（检查是否存在.git目录）
           if [ ! -d ".git" ]; then
             echo "首次部署，正在克隆仓库..."
-            git clone ${{ secrets.GIT_REPO_URL }} .
+            # 如果目录不为空，先清空（保留隐藏文件）
+            if [ "$(ls -A . 2>/dev/null | grep -v '^\.git$')" ]; then
+              echo "目录不为空，正在清理..."
+              find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+            fi
+            git clone "$GIT_REPO" .
             # 如果指定了分支，切换到对应分支
-            if [ -n "${{ secrets.GIT_BRANCH }}" ]; then
-              git checkout ${{ secrets.GIT_BRANCH }}
+            if [ -n "$GIT_BRANCH_NAME" ]; then
+              git checkout "$GIT_BRANCH_NAME" || git checkout main || git checkout master
             else
               git checkout main || git checkout master
             fi
           else
             # 拉取最新代码
             echo "正在拉取最新代码..."
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            echo "当前分支: $CURRENT_BRANCH"
             git fetch origin
-            git reset --hard origin/main || git reset --hard origin/master
+            git reset --hard "origin/$CURRENT_BRANCH" || git reset --hard "origin/main" || git reset --hard "origin/master"
           fi
           
           # 安装/更新依赖
@@ -59,20 +103,34 @@ jobs:
           
           # 清理旧的生成文件
           echo "正在清理旧文件..."
-          npm run clean || hexo clean
+          npm run clean || hexo clean || true
           
           # 生成静态文件
           echo "正在生成静态文件..."
           npm run build
           
+          # 检查生成的静态文件
+          if [ ! -d "public" ]; then
+            echo "错误: 未找到 public 目录，构建可能失败"
+            exit 1
+          fi
+          
           # 将生成的静态文件复制到1Panel网站根目录
           echo "正在部署到Web目录..."
-          if [ -n "${{ secrets.WEB_PATH }}" ]; then
-            # 如果配置了WEB_PATH，复制到指定目录
-            rsync -av --delete $DEPLOY_DIR/public/ ${{ secrets.WEB_PATH }}/
-            echo "部署完成！文件已复制到 ${{ secrets.WEB_PATH }}"
+          if [ -n "$WEB_DIR" ] && [ "$WEB_DIR" != "" ]; then
+            # 确保目标目录存在
+            if [ ! -d "$WEB_DIR" ]; then
+              echo "创建Web目录: $WEB_DIR"
+              mkdir -p "$WEB_DIR"
+            fi
+            # 复制文件到指定目录
+            echo "正在复制文件到 $WEB_DIR ..."
+            rsync -av --delete "$DEPLOY_DIR/public/" "$WEB_DIR/"
+            echo "部署完成！文件已复制到 $WEB_DIR"
           else
             echo "警告: 未配置 WEB_PATH，静态文件已生成在 $DEPLOY_DIR/public 目录"
           fi
           
+          echo "=============================================="
           echo "部署成功！"
+          echo "=============================================="
