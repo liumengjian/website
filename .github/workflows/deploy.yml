@@ -1,0 +1,46 @@
+name: 自动部署到服务器
+# 触发条件：推送到 main 分支时执行
+on:
+  push:
+    branches: [ main ]  # 如需监听其他分支，添加到数组中（如 master）
+  workflow_dispatch:  # 允许手动触发（可选，方便测试）
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # 运行环境（GitHub 提供的 Ubuntu 服务器）
+    steps:
+      # 步骤1：检出仓库代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 步骤2：配置 SSH 连接（让 Actions 能访问你的服务器）
+      - name: 配置 SSH
+        run: |
+          # 创建 .ssh 目录并设置权限
+          mkdir -p ~/.ssh
+          # 写入私钥
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # 信任服务器（避免首次连接的确认提示）
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      # 步骤3：SSH 连接服务器，执行部署命令
+      - name: 部署到服务器
+        uses: appleboy/ssh-action@v1.0.3  # 成熟的 SSH 执行工具
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          # 以下是服务器上执行的部署命令（根据你的项目修改）
+          script: |
+            cd /var/www/your-project  # 替换为你的服务器项目目录
+            git pull origin main  # 拉取最新代码
+            # 可选：安装依赖（根据项目类型）
+            # npm install --production  # Node.js 项目
+            # pip install -r requirements.txt  # Python 项目
+            # composer install --no-dev  # PHP 项目
+            # 可选：重启服务（根据你的启动方式）
+            # pm2 restart app  # PM2 管理的服务
+            # systemctl restart nginx  # Nginx 服务
+            echo "部署完成！"
