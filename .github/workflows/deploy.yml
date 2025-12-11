@@ -97,22 +97,110 @@ jobs:
             git reset --hard "origin/$CURRENT_BRANCH" || git reset --hard "origin/main" || git reset --hard "origin/master"
           fi
           
+          # 显示当前目录和 Node.js 信息
+          echo "当前工作目录: $(pwd)"
+          echo "Node.js 版本: $(node --version)"
+          echo "npm 版本: $(npm --version)"
+          echo "检查 package.json..."
+          if [ ! -f "package.json" ]; then
+            echo "错误: 未找到 package.json 文件"
+            exit 1
+          fi
+          cat package.json | head -20
+          
           # 安装/更新依赖
           echo "正在安装依赖..."
-          npm install --production=false
+          echo "清理 npm 缓存（可选）..."
+          npm cache clean --force 2>&1 || true
+          
+          echo "开始安装依赖..."
+          if ! npm install --production=false --verbose 2>&1; then
+            echo "错误: npm install 失败，请检查依赖配置"
+            echo "查看 npm 错误日志..."
+            # 查找最新的 npm 日志
+            if [ -d "$HOME/.npm/_logs" ]; then
+              LATEST_LOG=$(ls -t "$HOME/.npm/_logs"/*.log 2>/dev/null | head -1)
+              if [ -n "$LATEST_LOG" ]; then
+                echo "最新的 npm 日志:"
+                tail -100 "$LATEST_LOG" || true
+              fi
+            fi
+            # 尝试使用 yarn（如果可用）
+            if command -v yarn >/dev/null 2>&1; then
+              echo "尝试使用 yarn 安装依赖..."
+              if yarn install; then
+                echo "✓ 使用 yarn 安装成功"
+              else
+                echo "错误: yarn 安装也失败"
+                exit 1
+              fi
+            else
+              exit 1
+            fi
+          else
+            echo "✓ 依赖安装成功"
+          fi
+          
+          # 验证 hexo 是否安装成功
+          echo "验证 Hexo 安装..."
+          if [ -d "node_modules/hexo" ]; then
+            echo "✓ Hexo 已安装"
+            if [ -f "node_modules/.bin/hexo" ]; then
+              echo "✓ Hexo 可执行文件存在"
+              ./node_modules/.bin/hexo version || npx hexo version || true
+            fi
+          else
+            echo "警告: 未找到 node_modules/hexo 目录"
+            echo "node_modules 内容:"
+            ls -la node_modules 2>/dev/null | head -20 || echo "node_modules 不存在"
+          fi
+          
+          # 检查 hexo 命令是否可用
+          echo "检查 Hexo 命令..."
+          if ! command -v hexo >/dev/null 2>&1 && ! npx hexo --version >/dev/null 2>&1; then
+            echo "警告: hexo 命令不可用，尝试使用 npx hexo"
+          fi
           
           # 清理旧的生成文件
           echo "正在清理旧文件..."
-          npm run clean || hexo clean || true
+          npm run clean 2>&1 || npx hexo clean 2>&1 || echo "清理命令执行完成（忽略错误）"
+          
+          # 检查清理前的目录状态
+          echo "构建前目录内容:"
+          ls -la . | head -20 || true
           
           # 生成静态文件
           echo "正在生成静态文件..."
-          npm run build
+          echo "执行命令: npm run build"
+          if ! npm run build; then
+            echo "错误: 构建失败！"
+            echo "尝试直接使用 hexo generate..."
+            if ! npx hexo generate; then
+              echo "错误: hexo generate 也失败"
+              echo "当前目录内容:"
+              ls -la . || true
+              echo "检查是否有 node_modules:"
+              ls -la node_modules 2>/dev/null | head -10 || echo "node_modules 不存在"
+              exit 1
+            fi
+          fi
           
           # 检查生成的静态文件
+          echo "检查构建结果..."
           if [ ! -d "public" ]; then
             echo "错误: 未找到 public 目录，构建可能失败"
+            echo "当前目录内容:"
+            ls -la . || true
+            echo "检查是否有其他输出目录..."
+            find . -maxdepth 2 -type d -name "*public*" 2>/dev/null || true
             exit 1
+          fi
+          
+          # 检查 public 目录是否有内容
+          PUBLIC_COUNT=$(find public -type f 2>/dev/null | wc -l)
+          echo "✓ public 目录已生成，包含 $PUBLIC_COUNT 个文件"
+          if [ "$PUBLIC_COUNT" -eq 0 ]; then
+            echo "警告: public 目录为空，构建可能未正确完成"
           fi
           
           # 将生成的静态文件复制到1Panel网站根目录
