@@ -16,6 +16,9 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT || 22 }}
         script: |
+          DEPLOY_DIR="/var/www/website"  # 代码克隆目录
+          WEB_PATH="/www/wwwroot/www.plut0.cloud"  # 1Panel 站点根目录（核心！）
+
           # 设置部署目录（如果未配置DEPLOY_PATH则使用默认路径）
           if [ -n "${{ secrets.DEPLOY_PATH }}" ]; then
             DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
