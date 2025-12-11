@@ -6,7 +6,9 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
-    "server": "hexo server"
+    "server": "hexo server",
+    "push": "node scripts/push.js",
+    "push:quick": "git add . && git commit -m \"Update: auto commit\" && git push"
   },
   "hexo": {
     "version": "7.3.0"
