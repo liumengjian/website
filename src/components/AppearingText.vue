@@ -142,6 +142,8 @@ onBeforeUnmount(() => {
 
 .appearing-text-value {
   position: absolute;
+  white-space: nowrap;
+  line-height: 36px;
 }
 
 .appearing-text-clone {
