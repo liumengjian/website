@@ -3,9 +3,9 @@ import { soundsEnabled, howlerUnlocked } from "../features/sounds/composables/us
 import ButtonRound from "./ButtonRound.vue";
 import Volume from "./icons/Volume.vue";
 import { t } from "../i18n/utils/translate";
-import { useAgent } from "../composables/useAgent";
+// import { useAgent } from "../composables/useAgent";
 
-const { isTouch } = useAgent();
+// const { isTouch } = useAgent();
 
 const props = defineProps<{
   isDarkTheme: boolean;
