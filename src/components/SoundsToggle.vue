@@ -18,7 +18,6 @@ const toggleSounds = () => {
 
 <template>
   <ButtonRound
-    v-if="!isTouch"
     variant="theme"
     :class="{ 'music-toggle': true, 'music-toggle-dark': props.isDarkTheme, 'children-unclickable': true }"
     @click="toggleSounds"
