@@ -63,7 +63,7 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
     }
 
     &-node {
-      background-color: #237d23;
+      background-color: #9e4fc2;
       color: white;
     }
 
@@ -89,6 +89,31 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
 
     &-glsl {
       background-color: #95630e;
+      color: white;
+    }
+
+    &-koa {
+      background-color: #6a9eeb;
+      color: white;
+    }
+
+    &-wx {
+      background-color: #50c76a;
+      color: white;
+    }
+
+    &-ai {
+      background-color: #f5c518;
+      color: #3b2a01;
+    }
+
+    &-typescript {  
+      background-color: #3178c6;
+      color: white;
+    }
+
+    &-vue { 
+      background-color: #42b883;
       color: white;
     }
   }
