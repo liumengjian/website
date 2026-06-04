@@ -116,6 +116,16 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
       background-color: #42b883;
       color: white;
     }
+
+    &-indexDB {
+      background-color: #ec63a3;
+      color: white;
+    }
+
+    &-electron {
+      background-color: #ee724c;
+      color: white;
+    }
   }
 }
 </style>

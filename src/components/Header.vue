@@ -106,10 +106,11 @@ const getInTouchClassNames = computed(() => {
         :class="getInTouchClassNames"
         data-cursor="circle-white"
         data-hoversound="hover"
-        >{{ t("get-in-touch") }}</Button
       >
+        {{ t("get-in-touch") }}
+      </Button>
       <SoundsToggle class="header-sounds-toggle" :isDarkTheme="isDarkTheme" v-if="isFeatureEnabled('sounds')" />
-      <LangSwitch />
+      <LangSwitch :isDarkTheme="isDarkTheme" />
     </div>
   </header>
 </template>

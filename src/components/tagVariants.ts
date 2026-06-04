@@ -18,6 +18,8 @@ export type TagVariant =
   | "vue"
   | "ai"
   | "koa"
+  | "indexDB"
+  | "electron"
 
 export const tagLabels = {
   three: "Three.js",
@@ -39,4 +41,6 @@ export const tagLabels = {
   vue: "Vue.js",
   ai: "AI",
   koa: "Koa",
+  indexDB: "indexDB",
+  electron: "electron.js"
 } as const satisfies Record<TagVariant, string>;
