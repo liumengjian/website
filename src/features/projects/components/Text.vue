@@ -4,6 +4,7 @@ import { computed } from "vue";
 export interface Props {
   title?: string;
   text?: string;
+  type?: string;
 }
 
 const props = defineProps<Props>();
@@ -19,7 +20,8 @@ const classes = computed(() => {
 <template>
   <div :class="classes" v-if="props.title">
     <h3 class="text-title">{{ props.title }}</h3>
-    <p class="text-content" v-html="props.text"></p>
+    <a class="text-content" v-if="props.type === 'link'" :href="props.text" target="_blank" rel="noopener noreferrer">{{ props.text }}</a>
+    <p class="text-content" v-else v-html="props.text"></p>
   </div>
   <p v-else class="text" v-html="props.text"></p>
 </template>

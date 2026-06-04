@@ -16,6 +16,14 @@ export default {
     "AI PM is a local-browser-based AI assistant with full on-premise data storage and zero cloud data transmission. It acts as a dedicated AI helper for individuals and enterprises, and can function as an AI Product Manager after ingesting requirement documents. A desktop version is also ready; feel free to contact me for a free trial.",
   components: [
     {
+      type: "text",
+      props: {
+        type: "link",
+        title: "Try Online",
+        text: "https://www.prina.site/pm/"
+      },
+    },
+    {
       type: "media",
       props: {
         type: "image",

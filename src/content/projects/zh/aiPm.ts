@@ -16,6 +16,14 @@ export default {
     "AI PM 本地浏览器离线 AI 助手，数据全留存本地、零云端传输。支持自定义导入需求文档，一键变身 AI 产品经理，兼顾个人与企业使用<br/><br/>另有桌面版，可私信体验试用。",
   components: [
     {
+      type: "text",
+      props: {
+        type: "link",
+        title: "在线体验",
+        text: "https://www.prina.site/pm/"
+      },
+    },
+    {
       type: "media",
       props: {
         type: "image",
