@@ -109,18 +109,18 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
 const SERVICES_EN = [
   { name: "React & Vue" },
   { name: "TypeScript & Less" },
-  { name: "Node.js & Koa" },
+  { name: "Node.js & Koa Server Dev" },
   { name: "Webpack & Vite" },
-  { name: "AI: skills | rules | agent | harness" },
-  { name: "Mini Program | Large Screen | Map" },
+  { name: "AI Engineering: Prompt | Rule Engine | Agent | LLM Integration" },
+  { name: "Mini Program | Large Screen | GIS Map" },
 ] as const satisfies { name: string }[];
 
 const SERVICES_CN = [
   { name: "React & Vue" },
   { name: "TypeScript & Less" },
-  { name: "Node.js & Koa" },
+  { name: "Node.js | Koa Server Dev" },
   { name: "Webpack & Vite" },
-  { name: "AI: skills | rules | agent | harness" },
+  { name: "AI Engineering: Prompt | Rule Engine | Agent | LLM Integration" },
   { name: "小程序 | 大屏 | 地图" },
 ] as const satisfies { name: string }[];
 
