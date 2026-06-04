@@ -24,18 +24,13 @@ export const useHowler = () => {
   const handleUnlocked = () => {
     howlerUnlocked.value = true;
 
-    // Disable sounds completely on touch devices
-    if (isTouch.value) {
-      soundsEnabled.value = false;
-      return;
-    }
-
     const storeItem = localStorage.getItem("portfolio-soundsEnabled");
     if (storeItem) {
       soundsEnabled.value = storeItem === "true";
     } else {
-      soundsEnabled.value = true;
-      localStorage.setItem("portfolio-soundsEnabled", "true");
+      // Default: enabled on desktop, disabled on touch
+      soundsEnabled.value = !isTouch.value;
+      localStorage.setItem("portfolio-soundsEnabled", soundsEnabled.value.toString());
     }
   };
 
@@ -43,8 +38,7 @@ export const useHowler = () => {
     if (!howlerUnlocked.value) {
       if (Howler.ctx.state !== "running") return;
       handleUnlocked();
-    } else if (!isTouch.value) {
-      // Only process sounds on non-touch devices
+    } else {
       contactTick();
       roomTick();
 
@@ -62,15 +56,20 @@ export const useHowler = () => {
   };
 
   const handleKeyPress = (event: KeyboardEvent) => {
-    if (event.code === "KeyM" && !isTouch.value) {
+    if (event.code === "KeyM") {
       soundsEnabled.value = !soundsEnabled.value;
     }
   };
 
   watch(soundsEnabled, (newVal) => {
-    if (!isFeatureEnabled("sounds") || isTouch.value) return;
+    if (!isFeatureEnabled("sounds")) return;
     enabledVolume.value = newVal ? 1 : 0;
     localStorage.setItem("portfolio-soundsEnabled", newVal.toString());
+
+    // On touch devices, resume AudioContext on user toggle
+    if (newVal && isTouch.value && Howler.ctx.state === "suspended") {
+      Howler.ctx.resume();
+    }
   });
 
   const loadAllSounds = () => {
@@ -94,9 +93,7 @@ export const useHowler = () => {
     window.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("keydown", handleKeyPress);
 
-    if (!isTouch.value) {
-      loadAllSounds();
-    }
+    loadAllSounds();
   });
 
   onUnmounted(() => {
