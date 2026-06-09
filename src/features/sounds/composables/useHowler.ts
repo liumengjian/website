@@ -9,6 +9,7 @@ import { stopSnoreRepetition } from "../core/contact";
 import { tick as roomTick } from "../core/room";
 import { sounds } from "../definitions/sounds";
 import { getSoundsHowl } from "../utils/sounds";
+import { resources } from "../../../utils/resources";
 
 import type { SoundKey } from "../types";
 
@@ -72,12 +73,53 @@ export const useHowler = () => {
     }
   });
 
-  const loadAllSounds = () => {
-    for (const sound of Object.keys(sounds) as SoundKey[]) {
-      const howl = getSoundsHowl(sound);
-      if (howl) {
-        howl.load();
+  const loadSoundWithRetry = (soundKey: SoundKey, retries = 0): Promise<void> => {
+    const howl = getSoundsHowl(soundKey);
+    if (!howl) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      // Skip if already loaded
+      if (howl.state() === "loaded") {
+        resolve();
+        return;
       }
+
+      const onLoad = () => {
+        howl.off("load", onLoad);
+        howl.off("loaderror", onError);
+        resolve();
+      };
+
+      const onError = (_id: number, _error: unknown) => {
+        howl.off("load", onLoad);
+        howl.off("loaderror", onError);
+
+        if (retries < 2) {
+          // Retry with exponential backoff
+          const delay = Math.pow(2, retries + 1) * 1000; // 2s, 4s
+          setTimeout(() => {
+            howl.load();
+            loadSoundWithRetry(soundKey, retries + 1).then(resolve);
+          }, delay);
+        } else {
+          // Max retries exhausted — resolve anyway, don't block
+          console.warn(`[Audio] Failed to load ${soundKey} after ${retries + 1} attempts`);
+          resolve();
+        }
+      };
+
+      howl.once("load", onLoad);
+      howl.once("loaderror", onError);
+      howl.load();
+    });
+  };
+
+  const loadAllSounds = async () => {
+    const soundKeys = Object.keys(sounds) as SoundKey[];
+
+    // Load sequentially to avoid overwhelming the server
+    for (const key of soundKeys) {
+      await loadSoundWithRetry(key);
     }
   };
 
@@ -93,7 +135,15 @@ export const useHowler = () => {
     window.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("keydown", handleKeyPress);
 
-    loadAllSounds();
+    // Delay audio loading until after 3D resources are ready,
+    // then load in background to avoid competing with critical assets
+    if (resources.isReady) {
+      loadAllSounds();
+    } else {
+      resources.once("ready", () => {
+        loadAllSounds();
+      });
+    }
   });
 
   onUnmounted(() => {

@@ -11,6 +11,8 @@ const isProd = import.meta.env.PROD;
 
 type ResourceType = Texture | GLTF;
 
+const MAX_CONCURRENCY = 3; // Limit parallel requests to avoid overwhelming server
+const MAX_RETRIES = 2; // Retry failed loads with backoff
 const LOADING_TIMEOUT = 30000; // 30s max loading time as safety net
 
 class Resources extends EventEmitter<{
@@ -28,6 +30,10 @@ class Resources extends EventEmitter<{
     fontLoader: FontLoader;
   };
 
+  private timeoutId: number | undefined;
+  private queue: Array<{ source: (typeof sources)[number]; retries: number }> = [];
+  private activeCount = 0;
+
   constructor() {
     super();
 
@@ -41,34 +47,15 @@ class Resources extends EventEmitter<{
   startLoading() {
     if (this.isReady) return;
 
-    for (const source of sources) {
-      if (source.type === "gltfModel") {
-        this.loaders.gltfLoader.load(
-          source.path,
-          (file) => {
-            this.sourceLoaded(source, file);
-          },
-          undefined, // onProgress
-          (error) => {
-            this.sourceError(source, error);
-          },
-        );
-      } else if (source.type === "texture") {
-        this.loaders.textureLoader.load(
-          source.path,
-          (file: Texture) => {
-            file.colorSpace = SRGBColorSpace;
-            this.sourceLoaded(source, file);
-          },
-          undefined, // onProgress
-          (error) => {
-            this.sourceError(source, error);
-          },
-        );
-      }
+    // Enqueue all sources
+    this.queue = sources.map((s) => ({ source: s, retries: 0 }));
+
+    // Start initial batch
+    while (this.activeCount < MAX_CONCURRENCY && this.queue.length > 0) {
+      this.loadNext();
     }
 
-    // Safety timeout: force completion after LOADING_TIMEOUT
+    // Safety timeout
     this.timeoutId = window.setTimeout(() => {
       if (!this.isReady) {
         this.forceReady();
@@ -76,46 +63,107 @@ class Resources extends EventEmitter<{
     }, LOADING_TIMEOUT);
   }
 
+  private loadNext() {
+    const entry = this.queue.shift();
+    if (!entry) return;
+
+    this.activeCount++;
+
+    const { source } = entry;
+
+    if (source.type === "gltfModel") {
+      this.loaders.gltfLoader.load(
+        source.path,
+        (file) => {
+          this.sourceLoaded(source, file);
+          this.activeCount--;
+          this.drainQueue();
+        },
+        undefined,
+        (error) => {
+          this.handleError(entry, error);
+        },
+      );
+    } else if (source.type === "texture") {
+      this.loaders.textureLoader.load(
+        source.path,
+        (file: Texture) => {
+          file.colorSpace = SRGBColorSpace;
+          this.sourceLoaded(source, file);
+          this.activeCount--;
+          this.drainQueue();
+        },
+        undefined,
+        (error) => {
+          this.handleError(entry, error);
+        },
+      );
+    }
+  }
+
+  private handleError(entry: { source: (typeof sources)[number]; retries: number }, error: unknown) {
+    if (entry.retries < MAX_RETRIES) {
+      // Retry with exponential backoff
+      entry.retries++;
+      const delay = Math.pow(2, entry.retries) * 1000; // 2s, 4s
+      this.log(`Retrying ${entry.source.name} (attempt ${entry.retries + 1}) in ${delay}ms`);
+      setTimeout(() => {
+        this.queue.push(entry);
+        this.activeCount--;
+        this.drainQueue();
+      }, delay);
+    } else {
+      // Max retries exhausted — count as done
+      this.sourceError(entry.source, error);
+      this.activeCount--;
+      this.drainQueue();
+    }
+  }
+
+  private drainQueue() {
+    // Start more loads if capacity available
+    while (this.activeCount < MAX_CONCURRENCY && this.queue.length > 0) {
+      this.loadNext();
+    }
+
+    // Check if everything is done
+    if (this.activeCount === 0 && this.queue.length === 0 && !this.isReady) {
+      this.onReady();
+    }
+  }
+
   sourceLoaded(source: { name: string; type: string; path: string }, file: ResourceType) {
     if (this.isReady) return;
 
     this.items[source.name] = file;
     this.loaded++;
-
     this.emit("progress", this.loaded / this.toLoad);
-
-    if (this.loaded === this.toLoad) {
-      this.onReady();
-    }
+    this.log(`Loaded ${source.name} (${this.loaded}/${this.toLoad})`);
   }
 
   sourceError(source: { name: string; type: string; path: string }, error: unknown) {
-    // Count failed assets as "loaded" so the preloader doesn't get stuck
-    // Missing assets are rendered as fallback/empty in the 3D scene
+    if (this.isReady) return;
+
     this.log(`Failed to load ${source.name} (${source.type}): ${source.path}`);
     if (!isProd) {
       console.warn(`[Resources] Failed to load ${source.name}:`, error);
     }
 
     this.loaded++;
-
     this.emit("progress", this.loaded / this.toLoad);
-
-    if (this.loaded === this.toLoad) {
-      this.onReady();
-    }
   }
 
   forceReady() {
-    // Force completion: count all unloaded assets as failed
     if (this.isReady) return;
 
-    this.log(`Force ready: ${this.loaded}/${this.toLoad} assets loaded, timing out`);
+    // Force count remaining unloaded assets as done
+    const remaining = this.toLoad - this.loaded + this.queue.length;
+    this.log(`Force ready: ${this.loaded}/${this.toLoad} loaded, ${remaining} pending, timing out`);
 
-    // Mark remaining assets as loaded to trigger ready
     this.loaded = this.toLoad;
+    this.queue = [];
+    this.activeCount = 0;
     this.emit("progress", 1);
-
     this.onReady();
   }
 
@@ -133,8 +181,6 @@ class Resources extends EventEmitter<{
     if (isProd) return;
     console.log(`[Resources] ${message}`);
   }
-
-  private timeoutId: number | undefined;
 }
 
 export const resources = new Resources();
