@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, onMounted, onUnmounted } from "vue";
+import { computed, watch, onUnmounted } from "vue";
 import { useLegalModal } from "../composables/useLegalModal";
 import { locale } from "../i18n/store";
 import { t } from "../i18n/utils/translate";
