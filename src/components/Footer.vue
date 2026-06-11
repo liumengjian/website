@@ -4,10 +4,12 @@ import Link from "./Link.vue";
 import Clickable from "./Clickable.vue";
 import NotchSection from "./NotchSection.vue";
 import { t } from "../i18n/utils/translate";
-import { locale } from "../i18n/store";
 import ButtonRound from "./ButtonRound.vue";
 import { lenis } from "../composables/useScroll";
 import ArrowRightLong from "./icons/ArrowRightLong.vue";
+import { useLegalModal } from "../composables/useLegalModal";
+
+const { open } = useLegalModal();
 
 interface Props {
   withSocial?: boolean;
@@ -43,26 +45,28 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
         <div class="footer-top-links">
           <div class="footer-top-links-legal">
             <Clickable renderAs="div">
-              <Link
-                :href="locale === 'zh' ? '/zh/privacy' : '/privacy'"
+              <span
                 class="footer-link"
-                :external="true"
                 data-cursor="circle-white"
                 data-sound="click"
                 data-hoversound="hover"
-                >{{ t("privacy") }}</Link
-              >
+                @click="open('privacy')"
+                @keydown.enter="open('privacy')"
+                tabindex="0"
+                role="button"
+              >{{ t("privacy") }}</span>
             </Clickable>
             <Clickable renderAs="div">
-              <Link
-                :href="locale === 'zh' ? '/zh/legal' : '/legal'"
+              <span
                 class="footer-link children-unclickable"
-                :external="true"
                 data-cursor="circle-white"
                 data-sound="click"
                 data-hoversound="hover"
-                >{{ t("legal") }}</Link
-              >
+                @click="open('legal')"
+                @keydown.enter="open('legal')"
+                tabindex="0"
+                role="button"
+              >{{ t("legal") }}</span>
             </Clickable>
           </div>
         </div>

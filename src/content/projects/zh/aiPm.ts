@@ -13,7 +13,7 @@ export default {
   videoBorder: false,
   // live: "https://www.streakon.app",
   description:
-    "AI PM 本地浏览器离线 AI 助手，数据全留存本地、零云端传输。支持自定义导入需求文档，一键变身 AI 产品经理，兼顾个人与企业使用<br/><br/>另有桌面版，可私信体验试用。",
+    "AI PM 本地 AI 助手，知识库、数据留存在本地，零云端传输。可作为个人助理、企业客服助手，同时支持自定义导入需求文档，一键变身 AI 产品经理，兼顾个人与企业使用<br/><br/>另有桌面版，可私信体验试用。",
   components: [
     {
       type: "text",

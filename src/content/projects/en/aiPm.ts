@@ -13,7 +13,7 @@ export default {
   videoBorder: false,
   // live: "https://www.streakon.app",
   description:
-    "AI PM is a local-browser-based AI assistant with full on-premise data storage and zero cloud data transmission. It acts as a dedicated AI helper for individuals and enterprises, and can function as an AI Product Manager after ingesting requirement documents. A desktop version is also ready; feel free to contact me for a free trial.",
+    "AI PM is an on-premises AI assistant. Its knowledge base and all business data are stored locally without any cloud transmission.It can function as a personal assistant and enterprise customer service assistant. By importing customized requirement documents with one click, it can be transformed into an AI Product Manager, meeting the usage demands of individuals and enterprises.; feel free to contact me for a free trial.",
   components: [
     {
       type: "text",
