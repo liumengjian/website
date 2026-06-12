@@ -41,8 +41,8 @@ export default {
       props: {
         type: "image",
         src: IMG_3,
-        alt: "Friend Chat",
-        caption: "Friend Chat",
+        alt: "Friend Chat (Beta)",
+        caption: "Friend Chat (Beta)",
       },
     },
     {

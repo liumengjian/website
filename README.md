@@ -38,6 +38,6 @@ Please keep:
 - a visible reference to the original project/repository in derivative works
 
 Original portfolio:
--> https://david-hckh.com
+-> https://www.prina.site
 
 Commercial reuse or redistribution of substantial portions of this project without permission is prohibited.

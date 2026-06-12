@@ -126,6 +126,17 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
       background-color: #ee724c;
       color: white;
     }
+
+    &-gitHooks {
+      background-color: #a981d9;
+      color: white;
+    }
+
+    &-husky {
+      background-color: #edf57a;
+      color: white;
+    }
+
   }
 }
 </style>

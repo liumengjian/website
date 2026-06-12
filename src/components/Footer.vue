@@ -78,7 +78,7 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
           </p>
           <Clickable renderAs="div">
             <Link
-              href="https://david-hckh.com"
+              href="https://www.prina.site"
               class="footer-link children-unclickable"
               external
               data-cursor="circle-white"

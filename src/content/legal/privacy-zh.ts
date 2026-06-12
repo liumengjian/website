@@ -18,7 +18,7 @@ export default `
   <li><p><strong>服务</strong>指网站。</p></li>
   <li><p><strong>服务提供商</strong>是指代表公司处理数据的任何自然人或法人。它是指受雇于公司以促进服务、代表公司提供服务、执行与服务相关的服务或协助公司分析如何使用服务的第三方公司或个人。</p></li>
   <li><p><strong>使用数据</strong>是指自动收集的数据，无论是由服务的使用生成的还是从服务基础设施本身生成的（例如，页面访问的持续时间）。</p></li>
-  <li><p><strong>网站</strong>指 Prina，可从 <a href="https://www.prina.site" rel="external nofollow noopener" target="_blank">https://www.david-hckh.com</a> 访问</p></li>
+  <li><p><strong>网站</strong>指 Prina，可从 <a href="https://www.prina.site" rel="external nofollow noopener" target="_blank">https://www.prina.site</a> 访问</p></li>
   <li><p><strong>您</strong>是指访问或使用服务的个人，或代表该个人访问或使用服务的公司或其他法律实体。</p></li>
 </ul>
 <h1>收集和使用您的个人数据</h1>

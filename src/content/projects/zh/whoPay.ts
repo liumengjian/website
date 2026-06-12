@@ -41,8 +41,8 @@ export default {
       props: {
         type: "image",
         src: IMG_3,
-        alt: "好友聊天",
-        caption: "好友聊天",
+        alt: "好友聊天（内测）",
+        caption: "好友聊天（内测）",
       },
     },
     {
