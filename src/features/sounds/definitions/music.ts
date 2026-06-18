@@ -9,5 +9,5 @@ export const musicTracks = {
 } as const;
 
 export const BASE_VOLUMES = {
-  prina: 0.3,
+  prina: 0.15,
 } as const satisfies Record<MusicTrack, number>;
