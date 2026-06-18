@@ -20,6 +20,10 @@ const handleBackToTop = () => {
   lenis.value.scrollTo(0);
 };
 
+const goFilling = () => {
+  window.open('https://beian.miit.gov.cn', '_blank')
+}
+
 const { withSocial = true } = defineProps<Props>();
 const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
 </script>
@@ -88,6 +92,7 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
           </Clickable>
         </div>
         <p>© {{ new Date().getFullYear() }}Prina</p>
+        <Link calss="filling" @click="goFilling">晋ICP备2026003809号</Link>
       </div>
     </div>
   </footer>
