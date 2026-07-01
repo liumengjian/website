@@ -8,7 +8,7 @@ import ButtonRound from "./ButtonRound.vue";
 import { lenis } from "../composables/useScroll";
 import ArrowRightLong from "./icons/ArrowRightLong.vue";
 import { useLegalModal } from "../composables/useLegalModal";
-
+import PUBLIC from "../assets/images/normal/public.png";
 const { open } = useLegalModal();
 
 interface Props {
@@ -93,6 +93,10 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
         </div>
         <p>© {{ new Date().getFullYear() }}Prina</p>
         <Link calss="filling" @click="goFilling">晋ICP备2026003809号</Link>
+        <div class="footer-public">
+          <img :src="PUBLIC" />
+          晋公网安备14082402000189号
+        </div>
       </div>
     </div>
   </footer>
@@ -195,6 +199,14 @@ const showAttribution = import.meta.env.VITE_SHOW_ATTRIBUTION !== "false";
     transform: translateY(-100%);
     color: var(--color-background-300, var(--color-beige-400));
     --icon-color: var(--color-background-300, var(--color-beige-400));
+  }
+}
+.footer-public {
+  display: flex;
+  img {
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
   }
 }
 </style>
